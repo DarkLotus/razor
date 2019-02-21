@@ -33,47 +33,77 @@ namespace Assistant
 
 	public static unsafe class Windows
 	{
-		[DllImport("user32.dll")]
-		internal static extern bool SetForegroundWindow(IntPtr hWnd);
-        [DllImport("user32.dll")]
-        internal static extern IntPtr GetForegroundWindow();
+		internal static unsafe class LinuxWindows
+		{
+			[DllImport("libX11")]
+			private static extern IntPtr XOpenDisplay(IntPtr display);
 
-        [DllImport("user32.dll")]
-        internal static extern uint PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
-        [DllImport("kernel32.dll")]
-        internal static extern ushort GlobalAddAtom(string str);
-        [DllImport("kernel32.dll")]
-        internal static extern ushort GlobalDeleteAtom(ushort atom);
-        [DllImport("kernel32.dll")]
-        internal static extern uint GlobalGetAtomName(ushort atom, StringBuilder buff, int bufLen);
+			[DllImport("libX11")]
+			private static extern int XRaiseWindow(IntPtr display, IntPtr window);
+			
+			[DllImport("libX11")]
+			private static extern int XGetInputFocus(IntPtr display, IntPtr window, IntPtr focus_return);
+			public static void RaiseWindow(IntPtr clientWindow)
+			{
+				XRaiseWindow(XOpenDisplay(IntPtr.Zero), clientWindow);
+			}
 
-        [DllImport("Advapi32.dll")]
-		private static extern int GetUserNameA(StringBuilder buff, int* len);
+			public static IntPtr GetInputFocus()
+			{
+				IntPtr res = IntPtr.Zero;
+				IntPtr focus = IntPtr.Zero;
+				XGetInputFocus(XOpenDisplay(IntPtr.Zero), res, focus);
+				return res;
+			}
+			
+			
+		}
+		internal static unsafe class Win32Windows
+		{
+			[DllImport("WinUtil.dll")]
+			internal static extern unsafe IntPtr CaptureScreen(IntPtr handle, bool isFullScreen, string msgStr);
+			[DllImport("WinUtil.dll")]
+			internal static extern unsafe void BringToFront(IntPtr hWnd);
+			[DllImport("WinUtil.dll")]
+			internal static extern unsafe int HandleNegotiate(ulong word);
+			[DllImport("WinUtil.dll")]
+			internal static extern unsafe bool AllowBit(ulong bit);
+			[DllImport("WinUtil.dll")]
+			internal static extern unsafe void InitTitleBar(string path);
+			[DllImport("WinUtil.dll")]
+			internal static extern unsafe void DrawTitleBar(IntPtr handle, string path);
+			[DllImport("WinUtil.dll")]
+			internal static extern unsafe void FreeTitleBar();
+			[DllImport("WinUtil.dll")]
+			internal static extern unsafe void CreateUOAWindow(IntPtr razorWindow);
+			[DllImport("WinUtil.dll")]
+			internal static extern unsafe void DestroyUOAWindow();
+			[DllImport("user32.dll")]
+			internal static extern bool SetForegroundWindow(IntPtr hWnd);
+			[DllImport("user32.dll")]
+			internal static extern IntPtr GetForegroundWindow();
 
-		[DllImport("WinUtil.dll")]
-		internal static unsafe extern IntPtr CaptureScreen(IntPtr handle, bool isFullScreen, string msgStr);
-		[DllImport("WinUtil.dll")]
-		internal static unsafe extern void BringToFront(IntPtr hWnd);
-		[DllImport("WinUtil.dll")]
-		internal static unsafe extern int HandleNegotiate(ulong word);
-		[DllImport("WinUtil.dll")]
-		internal static unsafe extern bool AllowBit(ulong bit);
-		[DllImport("WinUtil.dll")]
-		internal static unsafe extern void InitTitleBar(string path);
-		[DllImport("WinUtil.dll")]
-		internal static unsafe extern void DrawTitleBar(IntPtr handle, string path);
-		[DllImport("WinUtil.dll")]
-		internal static unsafe extern void FreeTitleBar();
-        [DllImport("WinUtil.dll")]
-        internal static unsafe extern void CreateUOAWindow(IntPtr razorWindow);
-        [DllImport("WinUtil.dll")]
-        internal static unsafe extern void DestroyUOAWindow();
+			[DllImport("user32.dll")]
+			internal static extern uint PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+			[DllImport("kernel32.dll")]
+			internal static extern ushort GlobalAddAtom(string str);
+			[DllImport("kernel32.dll")]
+			internal static extern ushort GlobalDeleteAtom(ushort atom);
+			[DllImport("kernel32.dll")]
+			internal static extern uint GlobalGetAtomName(ushort atom, StringBuilder buff, int bufLen);
+
+			[DllImport("Advapi32.dll")]
+			internal static extern int GetUserNameA(StringBuilder buff, int* len);
+		}
+		
+
+
 
 		public static string GetWindowsUserName()
 		{
 			int len = 1024;
 			StringBuilder sb = new StringBuilder(len);
-			if (GetUserNameA(sb, &len) != 0)
+			if (Win32Windows.GetUserNameA(sb, &len) != 0)
 				return sb.ToString();
 			else
 				return "";
@@ -264,7 +294,110 @@ namespace Assistant
 
 			m_LastStr = str;
 
-			DrawTitleBar(ClientCommunication.ClientWindow, str);
+			//DrawTitleBar(ClientCommunication.ClientWindow, str);
+		}
+
+		public static bool AllowBit(uint agent)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				return Win32Windows.AllowBit(agent);
+			return true;
+		}
+
+		public static IntPtr CaptureScreen(IntPtr clientWindow, bool getBool, string timestamp)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				Win32Windows.CaptureScreen(clientWindow,getBool,timestamp);
+			return IntPtr.Zero;
+		}
+
+		public static void BringToFront(IntPtr clientWindow)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				Win32Windows.BringToFront(clientWindow);
+			else
+			{
+				LinuxWindows.RaiseWindow(clientWindow);
+			}
+		}
+
+		public static void FreeTitleBar()
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				Win32Windows.FreeTitleBar();
+		}
+
+		public static int HandleNegotiate(ulong features)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				Win32Windows.HandleNegotiate(features);
+			return 0;
+		}
+
+		public static void CreateUOAWindow(IntPtr clientWindow)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				Win32Windows.CreateUOAWindow(clientWindow);
+		}
+
+		public static void DestroyUOAWindow()
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				Win32Windows.DestroyUOAWindow();
+		}
+
+		public static void InitTitleBar(string path)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				Win32Windows.InitTitleBar(path);
+		}
+
+		public static void SetForegroundWindow(IntPtr clientWindow)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				Win32Windows.SetForegroundWindow(clientWindow);
+			else
+			{
+				LinuxWindows.RaiseWindow(clientWindow);
+			}
+		}
+
+		public static IntPtr GetForegroundWindow()
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				return Win32Windows.GetForegroundWindow();
+			else
+			{
+				return LinuxWindows.GetInputFocus();
+			}
+		}
+
+		public static ushort GlobalAddAtom(string str)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				return Win32Windows.GlobalAddAtom(str);
+			return 0;
+		}
+
+		public static uint PostMessage(IntPtr hWnd, uint msg, IntPtr atom, IntPtr zero)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				return Win32Windows.PostMessage(hWnd,msg,atom,zero);
+			return 0;
+		}
+
+		public static uint GlobalGetAtomName(ushort lParam, StringBuilder sb, int p2)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				return Win32Windows.GlobalGetAtomName(lParam,sb,p2);
+			return 0;
+		}
+
+		public static void GlobalDeleteAtom(ushort lParam)
+		{
+			if(Environment.OSVersion.Platform != PlatformID.Unix)
+				 Win32Windows.GlobalDeleteAtom(lParam);
+			return;
 		}
 	}
 }

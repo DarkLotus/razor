@@ -152,7 +152,7 @@ namespace Assistant
         public static string RootPath => _rootPath ?? (_rootPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
 
         [DllExport(CallingConvention.Cdecl)]
-        public static unsafe void Install(ref PluginHeader *plugin)
+        public static unsafe void Install(PluginHeader *plugin)
         {
             AppDomain.CurrentDomain.AssemblyResolve += (sender, e) =>
             {

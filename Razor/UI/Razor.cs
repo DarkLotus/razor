@@ -2963,9 +2963,12 @@ namespace Assistant
 
         private void DisableCloseButton()
         {
-            IntPtr menu = GetSystemMenu(this.Handle, false);
-            EnableMenuItem(menu, 0xF060, 0x00000002); //menu, SC_CLOSE, MF_BYCOMMAND|MF_GRAYED
-            m_CanClose = false;
+	        if (Environment.OSVersion.Platform != PlatformID.Unix)
+	        {
+		        IntPtr menu = GetSystemMenu(this.Handle, false);
+		        EnableMenuItem(menu, 0xF060, 0x00000002); //menu, SC_CLOSE, MF_BYCOMMAND|MF_GRAYED
+		        m_CanClose = false;
+	        }
         }
 
         private System.Timers.Timer _timer;

@@ -560,7 +560,13 @@ namespace Assistant
             string filename = Path.Combine(Config.GetInstallDirectory("Language"),
                 String.Format("Razor_lang.{0}", lang));
             if (!File.Exists(filename))
-                return false;
+            {
+                filename = Path.Combine(Config.GetInstallDirectory("Language"),
+                    String.Format("Razor_lang.{0}", lang.ToLower()));
+                if(!File.Exists(filename))
+                    return false;
+
+            }
             m_Current = lang;
             ArrayList errors = new ArrayList();
             Encoding encoding = Encoding.ASCII;
