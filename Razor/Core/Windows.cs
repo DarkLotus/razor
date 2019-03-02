@@ -3,7 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-
+using System.Windows.Forms;
 using Assistant.UI;
 
 namespace Assistant
@@ -37,15 +37,24 @@ namespace Assistant
 		{
 			[DllImport("libX11")]
 			private static extern IntPtr XOpenDisplay(IntPtr display);
-
+			[DllImport("libX11")]
+			private static extern IntPtr XCloseDisplay(IntPtr display);
 			[DllImport("libX11")]
 			private static extern int XRaiseWindow(IntPtr display, IntPtr window);
 			
 			[DllImport("libX11")]
 			private static extern int XGetInputFocus(IntPtr display, IntPtr window, IntPtr focus_return);
+			
+			
+			[DllImport("libX11")]
+			private static extern int XQueryKeymap(IntPtr display, byte[] keys);
+			[DllImport("libX11")]
+			private static extern int XKeysymToKeycode(IntPtr display, int key);
+			
 			public static void RaiseWindow(IntPtr clientWindow)
 			{
 				XRaiseWindow(XOpenDisplay(IntPtr.Zero), clientWindow);
+				
 			}
 
 			public static IntPtr GetInputFocus()
@@ -55,8 +64,33 @@ namespace Assistant
 				XGetInputFocus(XOpenDisplay(IntPtr.Zero), res, focus);
 				return res;
 			}
-			
-			
+
+
+			public static bool KeyDown(Keys keys)
+			{
+				try
+				{
+					var display = XOpenDisplay(IntPtr.Zero);
+					var szKey = new byte[32];
+					int res = XQueryKeymap(display, szKey);
+					Console.WriteLine("Res: " + res + " Key: " + keys.ToString());
+					//foreach(var xx in szKey)
+					//Console.WriteLine(xx + "-");
+					int code = XKeysymToKeycode(XOpenDisplay(IntPtr.Zero), (int) keys);
+					bool pressed = (szKey[code >> 3] & (1 << (code & 7))) == 0;
+					var r = szKey[code / 8];
+					var s = (1 << (code % 8));
+					var x = r & s;
+					Console.WriteLine("key " + (int) keys + " code " + code + " r " + r + " s " + s + " x " + x);
+					XCloseDisplay(display);
+					return r == s;
+				}
+				catch
+				{
+					return false;
+				}
+				
+			}
 		}
 		internal static unsafe class Win32Windows
 		{
@@ -398,6 +432,19 @@ namespace Assistant
 			if(Environment.OSVersion.Platform != PlatformID.Unix)
 				 Win32Windows.GlobalDeleteAtom(lParam);
 			return;
+		}
+		
+		[DllImport( "user32.dll" )]
+		private static extern ushort GetAsyncKeyState( int key );
+		
+		public static bool KeyDown(Keys keys)
+		{
+			 if(Environment.OSVersion.Platform != PlatformID.Unix)
+            			    return ( GetAsyncKeyState( (int)keys ) & 0xFF00 ) != 0 ;//|| ClientCommunication.IsKeyDown( (int)k );
+			 else
+			 {
+				return LinuxWindows.KeyDown(keys);
+			 }
 		}
 	}
 }

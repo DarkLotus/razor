@@ -257,12 +257,12 @@ namespace Assistant
 		public static TreeNode RootNode{ get{ return m_Root; } }
 		public static System.Windows.Forms.Label Status{ get{ return m_Status; } set{ m_Status = value; UpdateStatus(); } }
 
-		[DllImport( "user32.dll" )]
-		private static extern ushort GetAsyncKeyState( int key );
+		
 
 		public static bool KeyDown( Keys k )
 		{
-			return ( GetAsyncKeyState( (int)k ) & 0xFF00 ) != 0 ;//|| ClientCommunication.IsKeyDown( (int)k );
+	            return Windows.KeyDown(k);
+         
 		}
 
 		public static void Initialize()
