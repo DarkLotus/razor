@@ -53,7 +53,7 @@ namespace Assistant
 			
 			public static void RaiseWindow(IntPtr clientWindow)
 			{
-				XRaiseWindow(m_Display, clientWindow);
+				XRaiseWindow(Display, clientWindow);
 				
 			}
 			public static IntPtr Display
@@ -71,21 +71,22 @@ namespace Assistant
 			{
 				IntPtr res = IntPtr.Zero;
 				IntPtr focus = IntPtr.Zero;
-				XGetInputFocus(m_Display, res, focus);
+				XGetInputFocus(Display, res, focus);
 				return res;
 			}
 
 
 			public static bool KeyDown(Keys keys)
 			{
+				
 				try
 				{
 					var szKey = new byte[32];
-					int res = XQueryKeymap(m_Display, szKey);
+					int res = XQueryKeymap(Display, szKey);
 					Console.WriteLine("Res: " + res + " Key: " + keys.ToString());
 					//foreach(var xx in szKey)
 					//Console.WriteLine(xx + "-");
-					int code = XKeysymToKeycode(XOpenDisplay(IntPtr.Zero), (int) keys);
+					int code = XKeysymToKeycode(Display, (int) keys);
 					bool pressed = (szKey[code >> 3] & (1 << (code & 7))) == 0;
 					var r = szKey[code / 8];
 					var s = (1 << (code % 8));
