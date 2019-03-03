@@ -53,15 +53,25 @@ namespace Assistant
 			
 			public static void RaiseWindow(IntPtr clientWindow)
 			{
-				XRaiseWindow(XOpenDisplay(IntPtr.Zero), clientWindow);
+				XRaiseWindow(m_Display, clientWindow);
 				
 			}
+			public static IntPtr Display
+			{
+				get
+				{
+					if (m_Display == IntPtr.Zero)
+						m_Display = XOpenDisplay(IntPtr.Zero);
+					return m_Display;
+				}
+			}
 
+			private static IntPtr m_Display = IntPtr.Zero;
 			public static IntPtr GetInputFocus()
 			{
 				IntPtr res = IntPtr.Zero;
 				IntPtr focus = IntPtr.Zero;
-				XGetInputFocus(XOpenDisplay(IntPtr.Zero), res, focus);
+				XGetInputFocus(m_Display, res, focus);
 				return res;
 			}
 
@@ -70,9 +80,8 @@ namespace Assistant
 			{
 				try
 				{
-					var display = XOpenDisplay(IntPtr.Zero);
 					var szKey = new byte[32];
-					int res = XQueryKeymap(display, szKey);
+					int res = XQueryKeymap(m_Display, szKey);
 					Console.WriteLine("Res: " + res + " Key: " + keys.ToString());
 					//foreach(var xx in szKey)
 					//Console.WriteLine(xx + "-");
@@ -82,7 +91,6 @@ namespace Assistant
 					var s = (1 << (code % 8));
 					var x = r & s;
 					Console.WriteLine("key " + (int) keys + " code " + code + " r " + r + " s " + s + " x " + x);
-					XCloseDisplay(display);
 					return r == s;
 				}
 				catch
