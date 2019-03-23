@@ -1790,8 +1790,8 @@ namespace Assistant
             m_CurrentID = p.ReadUInt32(); // target uid
             m_CurFlags = p.ReadByte(); // flags
                                        // the rest of the packet is 0s
-           if (m_CurrentID == LocalTargID)
-               return;
+  //         if (m_CurrentID == LocalTargID)
+  //             return;
             // check for a server cancel command
             if (!m_AllowGround && m_CurrentID == 0 && m_CurFlags == 3)
             {
